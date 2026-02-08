@@ -1,0 +1,25 @@
+# Парсер ScienceDirect
+# Вывод в /mnt/nfs_share/sd_parse (NFS). Задайте DOCKERHUB_USER в .env
+#
+# Запуск контейнера
+#   docker compose up -d
+#
+# Выполнение скрипта по команде:
+#   docker compose exec parser run journals   — парсинг журналов
+#   docker compose exec parser run articles   — парсинг статей
+#   docker compose exec parser run issues     — парсинг выпусков
+#   docker compose exec parser run download   — скачивание PDF
+#   docker compose exec parser run help       — справка
+
+services:
+  parser:
+    build: .
+    image: ${DOCKERHUB_USER}/sciencedirect-parser:latest
+    environment:
+      - SD_PARSE_OUTPUT=/mnt/nfs_share/sd_parse
+    volumes:
+      - /mnt/nfs_share:/mnt/nfs_share
+    # ребут в случае падения
+    restart: unless-stopped
+    # Контейнер не завершается; скрипты запускают через exec
+    command: [ "sleep", "infinity" ]
