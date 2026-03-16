@@ -1,7 +1,7 @@
-# Парсер ScienceDirect
-# Вывод в /mnt/nfs_share/sd_parse (NFS). Задайте DOCKERHUB_USER в .env
+# Парсер ScienceDirect — один контейнер, работает постоянно.
+# Вывод в /mnt/nfs_share/sd_parse (NFS). Задайте DOCKERHUB_USER в .env.
 #
-# Запуск контейнера
+# Запуск контейнера (один раз, без выхода):
 #   docker compose up -d
 #
 # Выполнение скрипта по команде:
@@ -10,6 +10,7 @@
 #   docker compose exec parser run issues     — парсинг выпусков
 #   docker compose exec parser run download   — скачивание PDF
 #   docker compose exec parser run help       — справка
+# После перезагрузки сервера контейнер поднимется сам (restart: unless-stopped).
 
 services:
   parser:
@@ -19,7 +20,13 @@ services:
       - SD_PARSE_OUTPUT=/mnt/nfs_share/sd_parse
     volumes:
       - /mnt/nfs_share:/mnt/nfs_share
-    # ребут в случае падения
     restart: unless-stopped
-    # Контейнер не завершается; скрипты запускают через exec
     command: [ "sleep", "infinity" ]
+    # Ограничение ОЗУ: скрипт download (Chrome/Selenium) не должен съедать всю память хоста.
+    # Если deploy не применится (старый docker-compose), добавьте на уровне сервиса: mem_limit: 2g
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
